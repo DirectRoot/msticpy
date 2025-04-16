@@ -326,9 +326,11 @@ def _display_timeline_dict(
         )
 
     # Linked Data Table
-    data_table = DataTable(source=data['Party Admins']['source'])
+    data_tables = []
+    for source in [ d['source'] for d in data.values() ]:
+        data_tables.append(DataTable(source=source))
 
-    plot_layout = column(plot, rng_select, data_table) if param.range_tool else plot
+    plot_layout = column(plot, rng_select, *data_tables) if param.range_tool else plot
     if not param.hide:
         show(plot_layout)
 
