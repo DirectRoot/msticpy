@@ -290,7 +290,7 @@ def _display_timeline_dict(
         x_axis_label="Event Time",
         x_axis_type="datetime",
         x_minor_ticks=10,
-        tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan"],
+        tools=[hover, "xwheel_zoom", "box_zoom", "reset", "save", "xpan", 'xbox_select'],
         title=param.fmt_title,
         height=height,
         width=param.width,
@@ -330,8 +330,14 @@ def _display_timeline_dict(
         )
 
     # Linked Data Table
+    columns = []
+    for column_name in raw_data:
+        columns.append(
+            TableColumn(field=column_name)
+        )
     data_table = DataTable(
             source=shared_source,
+            columns=columns
             )
 
     plot_layout = column(plot, rng_select, data_table) if param.range_tool else plot
