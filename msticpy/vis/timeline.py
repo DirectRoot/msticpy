@@ -11,7 +11,7 @@ import attr
 import pandas as pd
 from bokeh.io import output_notebook, show
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, DataTable, Div, HoverTool, LayoutDOM, Legend, TableColumn  # type: ignore
+from bokeh.models import ColumnDataSource, DataTable, DateFormatter, HoverTool, LayoutDOM, Legend, TableColumn  # type: ignore
 from bokeh.models.annotations import LegendItem
 from bokeh.plotting import figure, reset_output
 
@@ -332,9 +332,19 @@ def _display_timeline_dict(
     # Linked Data Table
     columns = []
     for column_name in raw_data:
-        columns.append(
-            TableColumn(field=column_name)
-        )
+        if column_name == 'published':
+            columns.append(
+                TableColumn(
+                    field=column_name,
+                    formatter=DateFormatter(format='%Y-%m-%dT%H:%M:%S')
+                    )
+            )
+        else:
+            columns.append(
+                TableColumn(
+                    field=column_name,
+                    )
+            )
     data_table = DataTable(
             source=shared_source,
             columns=columns
