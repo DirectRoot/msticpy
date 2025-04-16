@@ -228,7 +228,7 @@ def display_timeline(
             color=param.color,
             size=param.size,
         )
-        return _display_timeline_dict(data=series_dict, param=param)
+        return _display_timeline_dict(data=series_dict, param=param, raw_data=data)
 
     if isinstance(data, dict):
         return _display_timeline_dict(data, param=param)
@@ -239,7 +239,7 @@ def display_timeline(
 
 
 def _display_timeline_dict(
-    data: dict, param: PlotParams
+    data: dict, param: PlotParams, raw_data
 ) -> LayoutDOM:  # noqa: C901, MC0001
     """
     Display a timeline of events.
@@ -310,8 +310,12 @@ def _display_timeline_dict(
 
     # set the tick datetime formatter
     plot.xaxis[0].formatter = get_tick_formatter()
+
+    raw_data['y_index'] = raw_data.groupby('group_name').ngroup()
+    shared_source = ColumnDataSource(raw_data)
+
     # plot the data
-    _plot_series(data, plot, param.legend)
+    _plot_series(data, plot, param.legend, shared_source)
 
     if param.ref_time is not None:
         plot_ref_line(plot, param.ref_time, param.ref_label, len(data))  # type: ignore
@@ -326,37 +330,31 @@ def _display_timeline_dict(
         )
 
     # Linked Data Table
-    data_tables = []
-    for name, definition in data.items():
-        columns = []
-        for column_name in definition['source'].column_names:
-            columns.append(TableColumn(
-                field=column_name
-            ))
-        data_tables.append(Div(
-            text=f'<h2>{name}</h2>'
-            ))
-        data_tables.append(DataTable(
-            source=definition['source'],
-            columns=columns,
-            ))
+    data_table = DataTable(
+            source=shared_source,
+            )
 
-    plot_layout = column(plot, rng_select, *data_tables) if param.range_tool else plot
+    plot_layout = column(plot, rng_select, data_table) if param.range_tool else plot
     if not param.hide:
         show(plot_layout)
 
     return plot_layout
 
 
-def _plot_series(data, plot, legend_pos):
+def _plot_series(data, plot, legend_pos, shared_source):
     """Plot data series and add legend."""
     # plot groups individually so that we can create an interactive legend
     # if legend_pos is "inline", we add add the normal legend inside the plot
     # if legend_pos is "left" or "right", we add the legend to the side
+    
+    from bokeh.models import CDSView, GroupFilter
+    
     if len(data) > 1 and not legend_pos:
         legend_pos = "left"
     legend_items = []
     for ser_name, series_def in data.items():
+        view = CDSView(filter=GroupFilter(column_name='group_name', group=ser_name))
+
         size_param = series_def.get("size", 10)
         glyph_size: Union[pd.Series, int]
         if isinstance(size_param, str):
@@ -377,7 +375,8 @@ def _plot_series(data, plot, legend_pos):
                 color=series_def["color"],
                 alpha=0.5,
                 size=glyph_size,
-                source=series_def["source"],
+                source=shared_source,
+                view=view,
                 legend_label=str(ser_name),
             )
         else:
@@ -388,7 +387,8 @@ def _plot_series(data, plot, legend_pos):
                 color=series_def["color"],
                 alpha=0.5,
                 size=glyph_size,
-                source=series_def["source"],
+                source=shared_source,
+                view=view,
             )
         if legend_pos in ["left", "right"]:
             legend_items.append(
