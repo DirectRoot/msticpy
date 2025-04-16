@@ -11,7 +11,7 @@ import attr
 import pandas as pd
 from bokeh.io import output_notebook, show
 from bokeh.layouts import column
-from bokeh.models import ColumnDataSource, DataTable, HoverTool, LayoutDOM, Legend  # type: ignore
+from bokeh.models import ColumnDataSource, DataTable, Div, HoverTool, LayoutDOM, Legend, TableColumn  # type: ignore
 from bokeh.models.annotations import LegendItem
 from bokeh.plotting import figure, reset_output
 
@@ -327,8 +327,19 @@ def _display_timeline_dict(
 
     # Linked Data Table
     data_tables = []
-    for source in [ d['source'] for d in data.values() ]:
-        data_tables.append(DataTable(source=source))
+    for name, definition in data.items():
+        columns = []
+        for column_name in definition['source'].column_names:
+            columns.append(TableColumn(
+                field=column_name
+            ))
+        data_tables.append(Div(
+            text=f'<h2>{name}</h2>'
+            ))
+        data_tables.append(DataTable(
+            source=definition['source'],
+            columns=columns,
+            ))
 
     plot_layout = column(plot, rng_select, *data_tables) if param.range_tool else plot
     if not param.hide:
