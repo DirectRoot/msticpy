@@ -342,12 +342,13 @@ def _display_timeline_dict(
         else:
             columns.append(
                 TableColumn(
-                    field=column_name,
+                    field=column_name
                     )
             )
     data_table = DataTable(
             source=shared_source,
-            columns=columns
+            columns=columns,
+            editable=True
             )
 
     plot_layout = column(plot, rng_select, data_table) if param.range_tool else plot
