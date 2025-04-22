@@ -311,7 +311,7 @@ def _display_timeline_dict(
     # set the tick datetime formatter
     plot.xaxis[0].formatter = get_tick_formatter()
 
-    raw_data['y_index'] = raw_data.groupby('group_name').ngroup()
+    raw_data['y_index'] = raw_data.groupby('id').ngroup()
     shared_source = ColumnDataSource(raw_data)
 
     # plot the data
@@ -369,7 +369,7 @@ def _plot_series(data, plot, legend_pos, shared_source):
         legend_pos = "left"
     legend_items = []
     for ser_name, series_def in data.items():
-        view = CDSView(filter=GroupFilter(column_name='group_name', group=ser_name))
+        view = CDSView(filter=GroupFilter(column_name='id', group=ser_name))
 
         size_param = series_def.get("size", 10)
         glyph_size: Union[pd.Series, int]
